@@ -26,6 +26,12 @@ python3 show_sticker.py flowers.png &
 python3 show_sticker.py tree.png &
 ```
 
+### Cerrar todos los Stickers
+
+```bash
+pkill -f show_sticker.py
+```
+
 ### Personalizando los Stickers
 Para personalizar los stickers:
 1. Agrega tus propias imágenes (PNG o GIF) al directorio del proyecto.
@@ -42,3 +48,15 @@ Puedes instalar las dependencias requeridas usando pip:
 ```bash
 pip install PyQt5
 ```
+
+## Ejemplos
+
+Video de ejemplo con los recursos en GitHub (imagines sin derechos de autor):
+
+https://github.com/user-attachments/assets/1756a14b-2507-4c83-b67d-dae1fa4c9db2
+
+Video con imagenes de un uso real combinado (Star Wars y HTTYD):
+
+https://github.com/user-attachments/assets/bb985b2b-1068-4e59-8a70-8d498d558ab8
+
+(Todos los elementos se pueden mover arrastrando)
