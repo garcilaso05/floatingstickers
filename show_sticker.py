@@ -1,14 +1,14 @@
 import sys
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QMovie
 from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
 
-#Con esta primera versión simplemente coseguimos generar ventanas invisibles y sin bordes
-#La imagen no es resizable, solo se puede mover arrastrando
-#Como está orientado a Hyprland consideramos que la ventana se podrá cerrar con los atajos normales WIN+C
-#También he creado un ejecutable para cerrarlos todos a la vez con: "pkill -f show_sticker.py"
-#Para borrar los bordes de la ventana se ha usado la función setWindowFlags(Qt.FramelessWindowHint) 
-#Pero además tenemos que crear una regla de ventanas en el hyprland.conf
+# Con esta primera versión simplemente coseguimos generar ventanas invisibles y sin bordes
+# La imagen no es resizable, solo se puede mover arrastrando
+# Como está orientado a Hyprland consideramos que la ventana se podrá cerrar con los atajos normales WIN+C
+# También he creado un ejecutable para cerrarlos todos a la vez con: "pkill -f show_sticker.py"
+# Para borrar los bordes de la ventana se ha usado la función setWindowFlags(Qt.FramelessWindowHint) 
+# Pero además tenemos que crear una regla de ventanas en el hyprland.conf
 #   windowrule = float, noborder on, ^(python3)$
 #   windowrule = noborder, ^(python3)$
 #   windowrule = noblur, ^(python3)$
@@ -27,27 +27,35 @@ class StickerWindow(QMainWindow):
         # Hacer la ventana completamente transparente
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        # Cargar la imagen
-        self.pixmap = QPixmap(image_path)
-        self.label = QLabel(self)
+        # Cargar la imagen o GIF
+        if image_path.lower().endswith('.gif'):
+            self.movie = QMovie(image_path)
+            self.label = QLabel(self)
+            self.label.setMovie(self.movie)
+            self.movie.start()
+        else:
+            self.pixmap = QPixmap(image_path)
+            self.label = QLabel(self)
 
         # Determinar el tamaño máximo en función de la orientación de la imagen
-        if self.pixmap.width() > self.pixmap.height():
-            max_size = 320
-        else:
-            max_size = 200
+        if hasattr(self, 'pixmap'):
+            if self.pixmap.width() > self.pixmap.height():
+                max_size = 320
+            else:
+                max_size = 200
 
-        # Redimensionar la imagen para que no exceda el tamaño máximo manteniendo la proporción
-        self.pixmap = self.pixmap.scaled(max_size, max_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            # Redimensionar la imagen para que no exceda el tamaño máximo manteniendo la proporción
+            self.pixmap = self.pixmap.scaled(max_size, max_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.set_image(self.pixmap)
 
-        # Establecer la imagen inicial
-        self.set_image(self.pixmap)
-
-        # Tamaño de la ventana según el tamaño de la imagen redimensionada
-        self.setFixedSize(self.pixmap.width(), self.pixmap.height())
+        # Tamaño de la ventana según el tamaño original del GIF
+        if hasattr(self, 'pixmap'):
+            self.setFixedSize(self.pixmap.size())
+        elif hasattr(self, 'movie'):
+            self.setFixedSize(self.movie.currentPixmap().size())
 
         # Posicionar la ventana en una ubicación concreta (ajusta las coordenadas si es necesario)
-        self.move(500, 200)
+        self.move(100, 200)
 
     def set_image(self, pixmap):
         """Actualizar la imagen mostrada en el QLabel"""
@@ -60,10 +68,12 @@ class StickerWindow(QMainWindow):
         new_height = event.size().height()
 
         # Mantener la proporción de la imagen
-        scaled_pixmap = self.pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        
-        # Establecer la nueva imagen redimensionada
-        self.set_image(scaled_pixmap)
+        if hasattr(self, 'pixmap'):
+            scaled_pixmap = self.pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.set_image(scaled_pixmap)
+        elif hasattr(self, 'movie'):
+            self.label.setGeometry(0, 0, new_width, new_height)  # Set the label size for GIFs
+            # No minimum size for GIFs, use original size
 
         # Llamar al evento original
         super().resizeEvent(event)
